@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Multi Counter App</title>
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/redux@4.0.1/dist/redux.js"></script>
+    <script src="https://unpkg.com/react-redux@7.0.3/dist/react-redux.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <style>
+        .counterValue {
+            font-size: 10em;
+            font-weight: bold;
+        }
+        .indexValue {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .box{
+            margin: 2em;
+            float: left;
+        }
+        .rightBox{
+            float: right;
+        }
+        .centerBox{
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="text/babel">
+
+        const { createStore } = Redux;
+        const { Provider, connect } = ReactRedux; 
+
+        const ActionTypes = {
+            "ADD" : "ADD",
+            "REMOVE" : "REMOVE",
+            "RESET_ALL" : "RESET_ALL",
+            "REMOVE_ALL" : "REMOVE_ALL",
+
+            "INCREMENT" : "INCREMENT",
+            "DECREMENT" : "DECREMENT",
+            "RESET" : "RESET"
+        }
+
+        function countersReducer(state=[],action){
+            switch(action.type){
+                case ActionTypes.ADD:
+                    return  [...state,0];
+                case ActionTypes.REMOVE:
+                    return  state.filter((element,index) => index!=action.payload);
+                case ActionTypes.RESET_ALL:
+                    return  state.map((element) => 0);
+                case ActionTypes.REMOVE_ALL:
+                    return [];
+                
+                case ActionTypes.INCREMENT:
+                    return  state.map((element,index) => index!=action.payload ? element : ++element);
+                case ActionTypes.DECREMENT:
+                    return  state.map((element,index) => index!=action.payload ? element : --element);
+                case ActionTypes.RESET:
+                    return  state.map((element,index) => index!=action.payload ? element : 0);
+                default:
+                    return state;
+            }
+        }
+
+        let store = createStore(countersReducer);
+        window.actions = actions;
+        window.store = store;
+
+        const actions = {
+            add: () => store.dispatch({type: ActionTypes.ADD}),
+            remove: (index) => store.dispatch({type: ActionTypes.REMOVE, payload: index}),
+            resetAll: () => store.dispatch({type: ActionTypes.RESET_ALL}),
+            removeAll: () => store.dispatch({type: ActionTypes.REMOVE_ALL}),
+
+            increment: (index) => store.dispatch({type: ActionTypes.INCREMENT, payload: index}),
+            decrement: (index) => store.dispatch({type: ActionTypes.DECREMENT, payload: index}),
+            reset: (index) => store.dispatch({type: ActionTypes.RESET, payload: index}),
+        }
+
+        class Counters extends React.Component{
+            constructor(props){
+                super(props);
+            }
+
+            render() {
+                return (
+                    <div>
+                        <div>
+                            <h1>{this.props.value}</h1>
+                            <div className="centerBox">
+                                <button onClick={this.props.handleAddCounter}>Add Timer</button>
+                                <button onClick={this.props.handleRemoveCounters}>Remove Timers</button>
+                                <button onClick={this.props.handleResetCounters}>Reset Timers</button>
+                            </div>
+                            <div className="container">
+                            {
+                                this.props.counters.map((counter, index) => (
+                                    <Counter key={index} value={counter}
+                                     onRemove={() => this.props.handleRemoveCounter(index)} 
+                                     onIncrement={() => this.props.handleIncrementCounter(index)} 
+                                     onDecrement={() => this.props.handleDecrementCounter(index)}
+                                     onReset={() => this.props.handleResetCounter(index)}/>
+                                ))
+                            }
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+        }
+
+        class Counter extends React.Component{
+            constructor(props){
+                super(props);
+            }
+
+            render() {
+                return (
+                        <div className="box">
+                            <div className="centerBox">
+                                <div className="centerBox">
+                                    <button onClick={this.props.onRemove}>Remove Timer</button>
+                                </div>
+                                <div className="leftBox indexValue">
+                                    {this.props.name}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="counterValue">{this.props.value}</div>
+                                <div className="centerBox">
+                                    <button onClick={this.props.onIncrement}>+</button>
+                                    <button onClick={this.props.onDecrement}>-</button>
+                                    <button onClick={this.props.onReset}>Reset Timer</button>
+                                </div>
+                            </div>
+                        </div>
+                );
+            }
+        }
+
+        const ConnectedCounters = connect(
+        (state) => {
+            return {
+                counters : state
+            }
+        },
+        (dispatch) => {
+            return {
+                handleAddCounter: () => actions.add(),
+                handleRemoveCounter: (index) => actions.remove(index),
+                handleRemoveCounters: () => actions.removeAll(),
+                handleResetCounters: () => actions.resetAll(),
+                handleIncrementCounter: (index) => actions.increment(index),
+                handleDecrementCounter: (index) => actions.decrement(index),
+                handleResetCounter: (index) => actions.reset(index)
+            }
+        })(Counters)
+
+        ReactDOM.render(
+        <Provider store={store}>
+            <ConnectedCounters/>
+        </Provider>,document.getElementById("root"));
+
+        setInterval( () => {
+            let timers = store.getState().length;
+            for(let i=0;i<timers;i++)
+                actions.increment(i);
+        },1000)
+
+    </script>
+    <div id="root"></div>
+</body>
+
+</html>
