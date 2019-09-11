@@ -6,7 +6,7 @@
 
         function onBodyLoad() {
             var myElement = document.getElementById('myElement');
-
+            let offsetY = 0;
             // create a simple instance
             // by default, it only adds horizontal recognizers
             var mc = new Hammer(myElement);
@@ -16,10 +16,22 @@
             mc.get('pan').set({ direction: Hammer.DIRECTION_ALL });
 
             // listen to events...
-            mc.on("panup pandown", function (ev) {
-                myElement.textContent = ev.type + " gesture detected.";
-                //console.log(ev.deltaX + " " + ev.deltaY) 
-                myElement.style.top=ev.deltaY
+            mc.on("pandown panup", function (ev) {
+                myElement.textContent = ev.type;
+                console.log(ev.type + " " + ev.deltaY);
+                myElement.style.top = offsetY + ev.deltaY
+            });
+
+            mc.on("panstart", function (ev) {
+                myElement.textContent = ev.type;
+                myElement.offsetTop = offsetY;
+                console.log(ev.type + " " + offsetY);
+            });
+
+            mc.on("panend", function (ev) {
+                myElement.textContent = ev.type;
+                offsetY = myElement.offsetTop;
+                console.log(ev.type + " " + offsetY);
             });
         }
 
